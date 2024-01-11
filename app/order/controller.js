@@ -16,8 +16,7 @@ const store = async (req, res, next) => {
       });
     }
     let address = await DeliveryAddress.findById(delivery_address);
-    let order = new Order({
-      _id: new Types.ObjectId(),
+    let order = await Order.create({ 
       status: "waiting_payment",
       delivery_fee,
       delivery_address: {
@@ -40,7 +39,7 @@ const store = async (req, res, next) => {
       }))
     );
     orderItems.forEach((item) => order.order_items.push(item));
-    order.save();
+    //order.save();
     await CartItem.deleteMany({ user: req.user._id });
     return res.json(order);
   } catch (err) {

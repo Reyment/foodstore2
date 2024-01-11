@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { model, Schema } = mongoose;
-const AutoIncrement = require("mongoose-sequence")(mongoose);
+const { MongooseAutoIncrementID } = require('mongoose-auto-increment-reworked'); 
 const bcrypt = require("bcrypt");
 
 const userSchema = Schema(
@@ -64,6 +64,16 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-userSchema.plugin(AutoIncrement, { inc_field: "customer_id" });
+MongooseAutoIncrementID.initialise('counters');
+
+userSchema.plugin(MongooseAutoIncrementID.plugin, {
+    modelName: 'User',
+    field: 'customer_id',
+    incrementBy: 1,
+    startAt: 1,
+    unique: true,
+    nextCount: false,
+    resetCount: false,
+  });
 
 module.exports = model("User", userSchema);

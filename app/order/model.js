@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { model, Schema } = mongoose;
-const AutoIncrement = require("mongoose-sequence")(mongoose);
+const { MongooseAutoIncrementID } = require('mongoose-auto-increment-reworked'); 
 const Invoice = require("../invoice/model");
 
 const orderSchema = Schema(
@@ -9,6 +9,9 @@ const orderSchema = Schema(
       type: String,
       enum: ["waiting_payment", "processing", "in_delivery", "delivered"],
       default: "waiting_payment",
+    },
+    order_numbers: {
+      type: Number,
     },
     delivery_fee: {
       type: Number,
@@ -30,7 +33,6 @@ const orderSchema = Schema(
   { timestamps: true }
 );
 
-orderSchema.plugin(AutoIncrement, { inc_field: "order_numbers" });
 orderSchema.virtual("items_count").get(function () {
   return this.order_items.reduce((total, item) => total + parseInt(item.qty), 0);
 });
@@ -48,4 +50,14 @@ orderSchema.post("save", async function () {
   await invoice.save();
 });
 
+MongooseAutoIncrementID.initialise('counters');
+orderSchema.plugin(MongooseAutoIncrementID.plugin, {
+    modelName: 'Order',
+    field: 'order_numbers',
+    incrementBy: 1,
+    startAt: 1,
+    unique: true,
+    nextCount: false,
+    resetCount: false,
+  });
 module.exports = model("Order", orderSchema);
